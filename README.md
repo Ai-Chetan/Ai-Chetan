@@ -114,11 +114,3 @@ I'm a passionate software developer who loves building, learning, and collaborat
 <p align="center">
   <img src="https://github-profile-trophy.vercel.app/?username=Ai-Chetan&theme=onedark&title=Stars,Followers,Commit,Issues,PullRequest,Repositories&margin-w=15&no-frame=true" alt="Trophies" />
 </p>
-
----
-
-## 👁️ Visitor Count
-
-<p align="center">
-  <img src="https://profile-counter.glitch.me/Ai-Chetan/count.svg" alt="Visitor Count" />
-</p>
