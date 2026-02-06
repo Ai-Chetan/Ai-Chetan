@@ -14,7 +14,7 @@
     <a href="mailto:chetankc2005@gmail.com">
         <img src="https://img.shields.io/badge/Email-chetankc2005%40gmail%2Ecom-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" />
     </a>
-    <a href="https://discord.gg/YOUR_NEW_INVITE">
+    <a href="https://discord.gg/5EAzyG86PU">
         <img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
     </a>
 </div>
@@ -86,7 +86,7 @@
     <br /><br />
 
   <img src="https://github-readme-stats-sigma-five.vercel.app/api?username=Ai-Chetan&show_icons=true&theme=dark&hide_border=true&bg_color=000000&title_color=0EA5E9&icon_color=0EA5E9&text_color=0EA5E9&border_radius=10" alt="GitHub Stats" width="48%" />
-    <img src="https://streak-stats.demolab.com?user=Ai-Chetan&theme=windows-dark&border_radius=10" alt="GitHub Streak" width="48%" />
+    <img src="https://streak-stats.demolab.com?user=Ai-Chetan&theme=windows-dark" alt="GitHub Streak" width="48%" />
     <br /><br />
 
   <img src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=Ai-Chetan&theme=holi" />
