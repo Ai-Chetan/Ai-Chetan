@@ -17,7 +17,7 @@
     <a href="https://discord.gg/5EAzyG86PU">
         <img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
     </a>
-    <img src="https://komarev.com/ghpvc/?username=Ai-Chetan&label=PROFILE+VIEWS&color=blue&style=flat-square" alt="Profile Views" height="28" />
+    <img src="https://komarev.com/ghpvc/?username=Ai-Chetan&label=PROFILE+VIEWS&color=blue&style=for-the-badge" alt="Profile Views" />
 </div>
 
 <div align="left">
