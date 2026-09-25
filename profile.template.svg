@@ -493,36 +493,21 @@ values=".7;1;.75"/>
 
 <g font-family="Inter,Arial,sans-serif" fill="#eef8ff">
 
-<text id="stat-contributions-label" x="675" y="222" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">CONTRIBUTIONS</text>
 <rect id="stat-contributions-box" x="672" y="228" width="82" height="31" rx="5" fill="#071524" opacity=".98"/>
 <text id="stat-contributions" x="675" y="253" font-size="27" font-weight="600">538</text>
 
 <rect x="674" y="278" width="113" height="17" rx="3" fill="#071524" opacity=".98"/>
 <text x="676" y="292" font-size="10.5" fill="#72cfff">Jul 2024 – Till Date</text>
 
-<text id="stat-repositories-label" x="845" y="222" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPOSITORIES</text>
 <rect id="stat-repositories-box" x="843" y="228" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
 <text id="stat-repositories" x="845" y="253" font-size="27" font-weight="600">49</text>
 
-<text id="stat-stars-label" x="675" y="351" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">STARS</text>
 <rect id="stat-stars-box" x="672" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
 <text id="stat-stars" x="675" y="382" font-size="27" font-weight="600">03</text>
 
-<text id="stat-forks-label" x="838" y="351" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">FORKS</text>
 <rect id="stat-forks-box" x="835" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
 <text id="stat-forks" x="838" y="382" font-size="27" font-weight="600">06</text>
 
-<text id="stat-views-label" x="675" y="431" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPO VIEWS</text>
-<rect id="stat-views-box" x="672" y="436" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text id="stat-views" x="675" y="461" font-size="27" font-weight="600">0</text>
-<rect x="674" y="486" width="73" height="17" rx="3" fill="#071524" opacity=".98"/>
-<text x="676" y="500" font-size="10.5" fill="#72cfff">last 14 days</text>
-
-<text id="stat-clones-label" x="845" y="431" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPO CLONES</text>
-<rect id="stat-clones-box" x="843" y="436" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text id="stat-clones" x="845" y="461" font-size="27" font-weight="600">0</text>
-<rect x="845" y="486" width="73" height="17" rx="3" fill="#071524" opacity=".98"/>
-<text x="847" y="500" font-size="10.5" fill="#72cfff">last 14 days</text>
 
 </g>
 </svg><svg id="profile-section-3" x="0" y="884" width="1024" height="626" viewBox="0 0 1024 626" preserveAspectRatio="none" overflow="hidden">
@@ -611,6 +596,7 @@ values=".7;1;.75"/>
     <rect id="project-4-contour" x="762.5" y="64.5" width="224" height="236" rx="16"/>
     <path id="globe-orbit" d="M-22 0 C-22-5-12-9 0-9 C12-9 22-5 22 0 C22 5 12 9 0 9 C-12 9-22 5-22 0Z"/>
     <path id="contribute-contour" d="M128 320 C225 309 355 307 447 323 C492 332 521 362 520 409 C519 452 492 479 449 488 C350 508 226 510 123 497 C71 493 37 456 37 409 C37 359 72 328 128 320Z"/>
+    <clipPath id="connect-body-clip"><rect x="545" y="372" width="450" height="130"/></clipPath>
     <path id="connect-contour" d="M590 330 C699 325 850 326 952 331 C978 333 990 344 990 371 L989 455 C988 483 974 494 945 496 C826 499 709 500 589 495 C562 494 553 485 553 456 L553 370 C553 343 563 332 590 330Z"/>
     <style>
       text{font-family:Arial,Helvetica,sans-serif}
@@ -863,7 +849,7 @@ values=".7;1;.75"/>
     </g>
   </g>
   <g id="contact-link-list">
-    <path d="M568 376 H978 V485 Q978 490 972 490 H574 Q568 490 568 484Z" fill="#020919" fill-opacity=".985"/>
+    <use href="#connect-contour" xlink:href="#connect-contour" fill="#020919" fill-opacity=".985" clip-path="url(#connect-body-clip)"/>
     <g id="discord-link" class="link-row" tabindex="0">
       <a href="https://discord.gg/5EAzyG86PU" target="_blank" rel="noopener noreferrer">
         <path d="M577 383.5 L582 381.5 L587 383.5 L590 389.5 L587.5 394.5 L580.5 394.5 L576.5 390Z" fill="none" stroke="#90efff" stroke-width="1.35" stroke-linejoin="round"/>

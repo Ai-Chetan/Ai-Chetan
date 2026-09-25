@@ -19,7 +19,7 @@ BOX_SUFFIX = "-box"
 MIN_BADGE_GAP = 24
 MIN_BOX_WIDTH = 34
 BADGE_FONT_SIZE = "27"
-ROWS = (("stat-contributions", "stat-repositories"), ("stat-stars", "stat-forks"), ("stat-views", "stat-clones"))
+ROWS = (("stat-contributions", "stat-repositories"), ("stat-stars", "stat-forks"))
 RELATIVE_UNITS = (
     ("year", 365 * 86400),
     ("month", 30 * 86400),
@@ -132,12 +132,6 @@ def fetch_owned_repos(login, token):
 def fetch_project(slug, token):
     data = api_get("/repos/" + slug, token)
     return data["stargazers_count"], parse_timestamp(data["pushed_at"])
-
-
-def fetch_traffic(slug, token):
-    views = api_get(f"/repos/{slug}/traffic/views", token)
-    clones = api_get(f"/repos/{slug}/traffic/clones", token)
-    return views["count"], clones["count"]
 
 
 def parse_timestamp(value):
@@ -324,24 +318,16 @@ def build_updates(config, token, now, warnings):
         total = guarded("contributions", lambda: fetch_contributions(login, since, now.date(), token), warnings)
         if total is not None:
             add("stat-contributions", "contributions", total)
-
-        traffic_repo = github.get("traffic_repo")
-        traffic = guarded("traffic", lambda: fetch_traffic(traffic_repo, token), warnings) if traffic_repo else None
-        if traffic is not None:
-            add("stat-views", "repo views (14d)", traffic[0])
-            add("stat-clones", "repo clones (14d)", traffic[1])
     else:
         for node_id, label in (
             ("stat-contributions", "contributions"),
             ("stat-repositories", "repositories"),
             ("stat-stars", "stars"),
             ("stat-forks", "forks"),
-            ("stat-views", "repo views (14d)"),
-            ("stat-clones", "repo clones (14d)"),
         ):
             skip(node_id, label)
         warnings.append(
-            "no token supplied: private repositories, contributions and traffic need STATS_PAT, template values kept"
+            "no token supplied: private repositories and contributions need STATS_PAT, template values kept"
         )
 
     for project in config["projects"]:
