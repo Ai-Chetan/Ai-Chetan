@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1510" viewBox="0 0 1024 1510" role="img" aria-labelledby="profile-title profile-description"><title id="profile-title">Chetan Chaudhari profile</title><desc id="profile-description">Animated introduction, technology stack, GitHub statistics, featured projects, collaboration, and contact sections.</desc><svg id="profile-section-1" x="0" y="0" width="1024" height="342" viewBox="0 0 2048 683" preserveAspectRatio="none" overflow="hidden">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1510" role="img" aria-labelledby="profile-title profile-description"><title id="profile-title">Chetan Chaudhari profile</title><desc id="profile-description">Animated introduction, technology stack, GitHub statistics, featured projects, collaboration, and contact sections.</desc><svg id="profile-section-1" x="0" y="0" width="1024" height="342" viewBox="0 0 2048 683" preserveAspectRatio="none" overflow="hidden">
 <defs>
 <linearGradient id="tailLong" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="230" y2="-128">
 <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
@@ -493,20 +493,36 @@ values=".7;1;.75"/>
 
 <g font-family="Inter,Arial,sans-serif" fill="#eef8ff">
 
-<rect x="672" y="228" width="82" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text x="675" y="253" font-size="27" font-weight="600">538</text>
+<text id="stat-contributions-label" x="675" y="222" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">CONTRIBUTIONS</text>
+<rect id="stat-contributions-box" x="672" y="228" width="82" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-contributions" x="675" y="253" font-size="27" font-weight="600">538</text>
 
 <rect x="674" y="278" width="113" height="17" rx="3" fill="#071524" opacity=".98"/>
 <text x="676" y="292" font-size="10.5" fill="#72cfff">Jul 2024 – Till Date</text>
 
-<rect x="843" y="228" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text x="845" y="253" font-size="27" font-weight="600">49</text>
+<text id="stat-repositories-label" x="845" y="222" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPOSITORIES</text>
+<rect id="stat-repositories-box" x="843" y="228" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-repositories" x="845" y="253" font-size="27" font-weight="600">49</text>
 
-<rect x="672" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text x="675" y="382" font-size="27" font-weight="600">03</text>
+<text id="stat-stars-label" x="675" y="351" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">STARS</text>
+<rect id="stat-stars-box" x="672" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-stars" x="675" y="382" font-size="27" font-weight="600">03</text>
 
-<rect x="835" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
-<text x="838" y="382" font-size="27" font-weight="600">06</text>
+<text id="stat-forks-label" x="838" y="351" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">FORKS</text>
+<rect id="stat-forks-box" x="835" y="357" width="50" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-forks" x="838" y="382" font-size="27" font-weight="600">06</text>
+
+<text id="stat-views-label" x="675" y="431" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPO VIEWS</text>
+<rect id="stat-views-box" x="672" y="436" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-views" x="675" y="461" font-size="27" font-weight="600">0</text>
+<rect x="674" y="486" width="73" height="17" rx="3" fill="#071524" opacity=".98"/>
+<text x="676" y="500" font-size="10.5" fill="#72cfff">last 14 days</text>
+
+<text id="stat-clones-label" x="845" y="431" font-size="9" font-weight="700" letter-spacing="1.1" fill="#6f93b8">REPO CLONES</text>
+<rect id="stat-clones-box" x="843" y="436" width="46" height="31" rx="5" fill="#071524" opacity=".98"/>
+<text id="stat-clones" x="845" y="461" font-size="27" font-weight="600">0</text>
+<rect x="845" y="486" width="73" height="17" rx="3" fill="#071524" opacity=".98"/>
+<text x="847" y="500" font-size="10.5" fill="#72cfff">last 14 days</text>
 
 </g>
 </svg><svg id="profile-section-3" x="0" y="884" width="1024" height="626" viewBox="0 0 1024 626" preserveAspectRatio="none" overflow="hidden">
@@ -683,11 +699,11 @@ values=".7;1;.75"/>
     <g id="project-1-time" class="meta-text">
       <circle cx="70" cy="283" r="5.3" fill="none" stroke="#a9c7dd" stroke-width="1"/>
       <path d="M70 280 V283 L72.2 284.5 M67.5 277.5 H70" fill="none" stroke="#a9c7dd" stroke-width=".9" stroke-linecap="round"/>
-      <text x="79" y="286.5">2 weeks ago</text>
+      <text id="project-1-updated" x="79" y="286.5">2 weeks ago</text>
     </g>
-    <g id="project-1-stars">
+    <g id="project-1-stars" transform="translate(-4,0)">
       <path d="M232 277.2 L233.7 280.8 L237.8 281.4 L234.8 284.3 L235.5 288.4 L232 286.4 L228.5 288.4 L229.2 284.3 L226.2 281.4 L230.3 280.8Z" fill="none" stroke="#a9c7dd" stroke-width="1" stroke-linejoin="round"/>
-      <text class="star-count" x="245" y="286.5">0</text>
+      <text id="project-1-star-count" class="star-count" x="259" y="286.5" text-anchor="end">0</text>
     </g>
   </g>
   <g id="project-card-2">
@@ -714,11 +730,11 @@ values=".7;1;.75"/>
     <g id="project-2-time" class="meta-text">
       <circle cx="310" cy="283" r="5.3" fill="none" stroke="#a9c7dd" stroke-width="1"/>
       <path d="M310 280 V283 L312.2 284.5 M307.5 277.5 H310" fill="none" stroke="#a9c7dd" stroke-width=".9" stroke-linecap="round"/>
-      <text x="319" y="286.5">5 hours ago</text>
+      <text id="project-2-updated" x="319" y="286.5">5 hours ago</text>
     </g>
-    <g id="project-2-stars">
+    <g id="project-2-stars" transform="translate(-4,0)">
       <path d="M472 277.2 L473.7 280.8 L477.8 281.4 L474.8 284.3 L475.5 288.4 L472 286.4 L468.5 288.4 L469.2 284.3 L466.2 281.4 L470.3 280.8Z" fill="none" stroke="#a9c7dd" stroke-width="1" stroke-linejoin="round"/>
-      <text class="star-count" x="485" y="286.5">0</text>
+      <text id="project-2-star-count" class="star-count" x="499" y="286.5" text-anchor="end">0</text>
     </g>
   </g>
   <g id="project-card-3">
@@ -745,11 +761,11 @@ values=".7;1;.75"/>
     <g id="project-3-time" class="meta-text">
       <circle cx="547" cy="283" r="5.3" fill="none" stroke="#a9c7dd" stroke-width="1"/>
       <path d="M547 280 V283 L549.2 284.5 M544.5 277.5 H547" fill="none" stroke="#a9c7dd" stroke-width=".9" stroke-linecap="round"/>
-      <text x="556" y="286.5">1 week ago</text>
+      <text id="project-3-updated" x="556" y="286.5">1 week ago</text>
     </g>
-    <g id="project-3-stars">
+    <g id="project-3-stars" transform="translate(-4,0)">
       <path d="M708 277.2 L709.7 280.8 L713.8 281.4 L710.8 284.3 L711.5 288.4 L708 286.4 L704.5 288.4 L705.2 284.3 L702.2 281.4 L706.3 280.8Z" fill="none" stroke="#a9c7dd" stroke-width="1" stroke-linejoin="round"/>
-      <text class="star-count" x="721" y="286.5">0</text>
+      <text id="project-3-star-count" class="star-count" x="735" y="286.5" text-anchor="end">0</text>
     </g>
   </g>
   <g id="project-card-4">
@@ -776,11 +792,11 @@ values=".7;1;.75"/>
     <g id="project-4-time" class="meta-text">
       <circle cx="787" cy="283" r="5.3" fill="none" stroke="#a9c7dd" stroke-width="1"/>
       <path d="M787 280 V283 L789.2 284.5 M784.5 277.5 H787" fill="none" stroke="#a9c7dd" stroke-width=".9" stroke-linecap="round"/>
-      <text x="796" y="286.5">1 week ago</text>
+      <text id="project-4-updated" x="796" y="286.5">1 week ago</text>
     </g>
-    <g id="project-4-stars">
+    <g id="project-4-stars" transform="translate(-4,0)">
       <path d="M938 277.2 L939.7 280.8 L943.8 281.4 L940.8 284.3 L941.5 288.4 L938 286.4 L934.5 288.4 L935.2 284.3 L932.2 281.4 L936.3 280.8Z" fill="none" stroke="#a9c7dd" stroke-width="1" stroke-linejoin="round"/>
-      <text class="star-count" x="951" y="286.5">0</text>
+      <text id="project-4-star-count" class="star-count" x="965" y="286.5" text-anchor="end">0</text>
     </g>
   </g>
   <g id="project-border-traces" aria-hidden="true">

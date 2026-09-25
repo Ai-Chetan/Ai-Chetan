@@ -1,0 +1,15 @@
+{
+  "github": {
+    "user": "Ai-Chetan",
+    "contributions_since": "2024-07-01",
+    "traffic_repo": "Ai-Chetan/Ai-Chetan",
+    "count_forks_as_repositories": false,
+    "count_forks_in_stars_and_forks": false
+  },
+  "projects": [
+    { "card": 1, "repo": "Ai-Chetan/Project-DigitalTwin" },
+    { "card": 2, "repo": "Ai-Chetan/Aura" },
+    { "card": 3, "repo": "Ai-Chetan/NexusGrid" },
+    { "card": 4, "repo": "Nischay-loq/DeployX" }
+  ]
+}

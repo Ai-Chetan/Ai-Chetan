@@ -1,0 +1,53 @@
+name: Update live profile
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-live-profile
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: Refresh live stats
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out template
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fill live values
+        env:
+          STATS_PAT: ${{ secrets.STATS_PAT }}
+        run: python scripts/update_profile.py --config config.json --template profile.template.svg --out profile.svg
+
+      - name: Publish to live branch
+        run: |
+          set -euo pipefail
+          if git fetch --depth=1 origin live:refs/remotes/origin/live 2>/dev/null; then
+            if git show origin/live:profile.svg 2>/dev/null | cmp -s - profile.svg; then
+              echo "live branch already matches, nothing to publish"
+              exit 0
+            fi
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan live-build
+          git reset -q
+          git add profile.svg
+          git commit -q -m "chore: refresh live profile stats"
+          git push --force origin HEAD:refs/heads/live
+          echo "published $(git rev-parse --short HEAD) to live"
