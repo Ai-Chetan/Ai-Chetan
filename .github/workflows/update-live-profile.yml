@@ -2,7 +2,7 @@ name: Update live profile
 
 on:
   schedule:
-    - cron: "17,47 * * * *"
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ jobs:
   update:
     name: Refresh live stats
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out template
         uses: actions/checkout@v4
