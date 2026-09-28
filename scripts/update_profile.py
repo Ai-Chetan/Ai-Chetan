@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import datetime as dt
@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -20,6 +21,16 @@ MIN_BADGE_GAP = 24
 MIN_BOX_WIDTH = 34
 BADGE_FONT_SIZE = "27"
 ROWS = (("stat-contributions", "stat-repositories"), ("stat-stars", "stat-forks"))
+PRIMARY_STATS = ("stat-contributions", "stat-repositories", "stat-stars", "stat-forks")
+REQUEST_ATTEMPTS = 4
+BACKOFF_SECONDS = (2, 5, 12)
+RETRYABLE_STATUS = frozenset({403, 408, 425, 429, 500, 502, 503, 504})
+TRANSIENT_MARKERS = ("rate limit", "secondary rate", "timeout", "timed out", "temporarily", "abuse")
+# GitHub rejects contributionsCollection ranges longer than a year, so the range is
+# split into contiguous chunks. Chunking by year instead of by month cuts the request
+# count from 27 to 3 per run, so a single hiccup can no longer freeze the whole total.
+CONTRIBUTION_WINDOW_DAYS = 364
+FORKS_STATS = ("forked_repositories", "received")
 RELATIVE_UNITS = (
     ("year", 365 * 86400),
     ("month", 30 * 86400),
@@ -45,6 +56,22 @@ class LiveStatsError(RuntimeError):
     pass
 
 
+class RetryableError(LiveStatsError):
+    pass
+
+
+def with_retries(task, label):
+    for attempt in range(1, REQUEST_ATTEMPTS + 1):
+        try:
+            return task()
+        except RetryableError as error:
+            if attempt == REQUEST_ATTEMPTS:
+                raise LiveStatsError(f"{label}: {error}") from error
+            delay = BACKOFF_SECONDS[min(attempt - 1, len(BACKOFF_SECONDS) - 1)]
+            print(f"  {label}: attempt {attempt} failed ({error}); retrying in {delay}s", file=sys.stderr)
+            time.sleep(delay)
+
+
 def request_json(url, token, payload=None):
     headers = {
         "Accept": "application/vnd.github+json",
@@ -62,40 +89,45 @@ def request_json(url, token, payload=None):
         with urllib.request.urlopen(request, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
-        detail = error.read().decode("utf-8", "replace")[:200].replace("\n", " ")
-        raise LiveStatsError(f"HTTP {error.code}: {detail}") from error
+        detail = " ".join(error.read().decode("utf-8", "replace")[:200].split())
+        message = f"HTTP {error.code}: {detail}"
+        if error.code in RETRYABLE_STATUS:
+            raise RetryableError(message) from error
+        raise LiveStatsError(message) from error
     except urllib.error.URLError as error:
-        raise LiveStatsError(f"unreachable: {error.reason}") from error
+        raise RetryableError(f"unreachable: {error.reason}") from error
 
 
 def api_get(path, token):
-    return request_json(REST + path, token)
+    return with_retries(lambda: request_json(REST + path, token), path.split("?")[0])
 
 
 def api_graphql(query, variables, token):
-    payload = request_json(GRAPHQL, token, {"query": query, "variables": variables})
-    if payload.get("errors"):
-        raise LiveStatsError(json.dumps(payload["errors"])[:200])
-    return payload["data"]
+    def call():
+        payload = request_json(GRAPHQL, token, {"query": query, "variables": variables})
+        errors = payload.get("errors")
+        if errors:
+            message = json.dumps(errors)[:200]
+            if any(marker in message.lower() for marker in TRANSIENT_MARKERS):
+                raise RetryableError(message)
+            raise LiveStatsError(message)
+        return payload["data"]
+
+    return with_retries(call, "graphql")
 
 
-def next_month(date):
-    if date.month == 12:
-        return dt.date(date.year + 1, 1, 1)
-    return dt.date(date.year, date.month + 1, 1)
-
-
-def month_windows(start, end):
-    cursor = start.replace(day=1)
+def contribution_windows(start, end):
+    cursor = start
     while cursor <= end:
-        following = next_month(cursor)
-        yield cursor, min(following - dt.timedelta(days=1), end)
-        cursor = following
+        window_end = min(cursor + dt.timedelta(days=CONTRIBUTION_WINDOW_DAYS - 1), end)
+        yield cursor, window_end
+        cursor = window_end + dt.timedelta(days=1)
 
 
 def fetch_contributions(login, since, today, token):
     total = 0
-    for window_start, window_end in month_windows(since, today):
+    windows = list(contribution_windows(since, today))
+    for window_start, window_end in windows:
         data = api_graphql(
             CONTRIBUTIONS_QUERY,
             {
@@ -109,7 +141,7 @@ def fetch_contributions(login, since, today, token):
         if not user:
             raise LiveStatsError(f"no user returned for {login}")
         total += user["contributionsCollection"]["totalContributions"]
-    return total
+    return total, windows
 
 
 def fetch_owned_repos(login, token):
@@ -127,6 +159,33 @@ def fetch_owned_repos(login, token):
             break
         page += 1
     return repos
+
+
+def repo_totals(repos, github):
+    if "count_forks_in_stars_and_forks" in github:
+        raise LiveStatsError(
+            "github.count_forks_in_stars_and_forks was removed: "
+            "use github.count_forks_in_stars and github.forks_stat"
+        )
+    include_forks_in_repos = github.get("count_forks_as_repositories", True)
+    include_forks_in_stars = github.get("count_forks_in_stars", False)
+    forks_stat = github.get("forks_stat", "forked_repositories")
+    if forks_stat not in FORKS_STATS:
+        raise LiveStatsError(
+            f'github.forks_stat must be one of {", ".join(FORKS_STATS)}: {forks_stat!r}'
+        )
+    owned = repos if include_forks_in_repos else [item for item in repos if not item["fork"]]
+    original = repos if include_forks_in_stars else [item for item in repos if not item["fork"]]
+    forks = (
+        sum(1 for item in repos if item["fork"])
+        if forks_stat == "forked_repositories"
+        else sum(item["forks_count"] for item in original)
+    )
+    return {
+        "repositories": len(owned),
+        "stars": sum(item["stargazers_count"] for item in original),
+        "forks": forks,
+    }
 
 
 def fetch_project(slug, token):
@@ -280,7 +339,7 @@ def build_updates(config, token, now, warnings):
     login = github["user"]
     updates = []
 
-    def entry(node_id, label, value, numeric=True, box_id=None, status="updated"):
+    def entry(node_id, label, value, numeric=True, box_id=None, status="updated", note=""):
         return {
             "node_id": node_id,
             "box_id": box_id,
@@ -290,10 +349,13 @@ def build_updates(config, token, now, warnings):
             "rendered": "",
             "previous": "",
             "status": status,
+            "note": note,
         }
 
-    def add(node_id, label, value, numeric=True, box_id=None):
-        updates.append(entry(node_id, label, value, numeric, node_id + BOX_SUFFIX if box_id is None else box_id))
+    def add(node_id, label, value, numeric=True, box_id=None, note=""):
+        updates.append(
+            entry(node_id, label, value, numeric, node_id + BOX_SUFFIX if box_id is None else box_id, note=note)
+        )
 
     def skip(node_id, label, numeric=True, box_id=None):
         updates.append(entry(node_id, label, None, numeric, box_id, "unavailable"))
@@ -308,16 +370,38 @@ def build_updates(config, token, now, warnings):
             ):
                 skip(node_id, label)
         else:
-            counted = repos if github["count_forks_in_stars_and_forks"] else [item for item in repos if not item["fork"]]
-            owned = repos if github["count_forks_as_repositories"] else [item for item in repos if not item["fork"]]
-            add("stat-repositories", "repositories", len(owned))
-            add("stat-stars", "stars", sum(item["stargazers_count"] for item in counted))
-            add("stat-forks", "forks", sum(item["forks_count"] for item in counted))
+            totals = guarded("repository totals", lambda: repo_totals(repos, github), warnings)
+            if totals is None:
+                for node_id, label in (
+                    ("stat-repositories", "repositories"),
+                    ("stat-stars", "stars"),
+                    ("stat-forks", "forks"),
+                ):
+                    skip(node_id, label)
+            else:
+                forked = sum(1 for item in repos if item["fork"])
+                scope = f"{len(repos)} owned repos, {forked} of them forks"
+                add("stat-repositories", "repositories", totals["repositories"], note=scope)
+                add("stat-stars", "stars", totals["stars"], note=scope)
+                forks_note = (
+                    f"{forked} forked repositories"
+                    if github.get("forks_stat", "forked_repositories") == "forked_repositories"
+                    else "forks received on your repositories"
+                )
+                add("stat-forks", "forks", totals["forks"], note=forks_note)
 
         since = dt.date.fromisoformat(github["contributions_since"])
-        total = guarded("contributions", lambda: fetch_contributions(login, since, now.date(), token), warnings)
-        if total is not None:
-            add("stat-contributions", "contributions", total)
+        result = guarded("contributions", lambda: fetch_contributions(login, since, now.date(), token), warnings)
+        if result is None:
+            skip("stat-contributions", "contributions")
+        else:
+            total, windows = result
+            add(
+                "stat-contributions",
+                "contributions",
+                total,
+                note=f"{windows[0][0]} to {windows[-1][1]} in {len(windows)} queries",
+            )
     else:
         for node_id, label in (
             ("stat-contributions", "contributions"),
@@ -363,6 +447,9 @@ def apply_updates(template, updates):
     return svg
 
 
+STATUS_LABEL = {"updated": "updated", "unchanged": "unchanged", "unavailable": "**unavailable**"}
+
+
 def report(updates, warnings):
     print("value".ljust(46) + "template".rjust(12) + "live".rjust(12) + "  status")
     print("-" * 84)
@@ -378,6 +465,60 @@ def report(updates, warnings):
         print()
         for warning in warnings:
             print("warning: " + warning)
+    stale = missing_primary(updates)
+    frozen = [
+        update["label"]
+        for update in updates
+        if update["status"] == "unavailable" and update["node_id"] not in PRIMARY_STATS
+    ]
+    if stale or frozen:
+        print()
+        print("=" * 84)
+        print("STALE VALUES ON THE PROFILE (the API was not reached, so template values are showing):")
+        for label in stale + frozen:
+            print("  - " + label)
+        if any("no token supplied" in warning for warning in warnings):
+            print("  cause: STATS_PAT secret is empty or invalid")
+        elif stale:
+            print("  cause: contributions need a token with 'read:user' scope; a private-repo token")
+            print("         without it makes every contributionsCollection query fail")
+        print("=" * 84)
+    write_step_summary(updates, warnings)
+
+
+def write_step_summary(updates, warnings):
+    target = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not target:
+        return
+    lines = ["## Live profile stats", "", "| value | template | live | status | source |", "| --- | ---: | ---: | --- | --- |"]
+    for update in updates:
+        rendered = update["rendered"] if update["status"] != "unavailable" else "-"
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    update["label"],
+                    update["previous"],
+                    rendered,
+                    STATUS_LABEL.get(update["status"], update["status"]),
+                    update["note"],
+                ]
+            )
+            + " |"
+        )
+    if warnings:
+        lines += ["", "### Warnings", ""] + [f"- {warning}" for warning in warnings]
+    try:
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write("\n".join(lines) + "\n")
+    except OSError as error:
+        print(f"could not write step summary: {error}", file=sys.stderr)
+
+
+def missing_primary(updates):
+    return [
+        update["label"] for update in updates if update["node_id"] in PRIMARY_STATS and update["value"] is None
+    ]
 
 
 def main(argv=None):
@@ -388,6 +529,11 @@ def main(argv=None):
     parser.add_argument("--token", default=os.environ.get("STATS_PAT") or os.environ.get("GH_TOKEN") or "")
     parser.add_argument("--now", default="", help="ISO-8601 UTC timestamp, overrides the current time")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero when a primary stat cannot be fetched, so stale template values never publish",
+    )
     arguments = parser.parse_args(argv)
 
     config = json.loads(Path(arguments.config).read_text(encoding="utf-8"))
@@ -400,6 +546,11 @@ def main(argv=None):
     svg = apply_updates(template, updates)
     validate(svg, [update["node_id"] for update in updates if update["value"] is not None])
     report(updates, warnings)
+
+    stale = missing_primary(updates)
+    if stale and arguments.strict:
+        print("error: could not fetch " + ", ".join(stale) + "; refusing to publish template values", file=sys.stderr)
+        return 2
 
     if arguments.dry_run:
         print("\ndry run, nothing written")
