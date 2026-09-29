@@ -4,6 +4,18 @@ on:
   schedule:
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and report, but publish nothing"
+        type: boolean
+        default: false
+  push:
+    branches: [master]
+    paths:
+      - "config.json"
+      - "profile.template.svg"
+      - "scripts/build.py"
+      - ".github/workflows/update-live-profile.yml"
 
 permissions:
   contents: write
@@ -18,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out template
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           ref: master
@@ -30,15 +42,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fill live values
+      - name: Build profile.svg and README.md
         env:
           STATS_PAT: ${{ secrets.STATS_PAT }}
-        run: python scripts/update_profile.py --config config.json --template profile.template.svg --out profile.svg
+        run: >
+          python scripts/build.py
+          --config config.json
+          --template profile.template.svg
+          --out profile.svg
+          --readme README.md
+          --strict
 
-      - name: Publish to live branch
+      # Runs while HEAD is still on master: the publish step below switches to an
+      # orphan branch, after which master must no longer be touched.
+      - name: Sync README.md to master
+        if: ${{ inputs.dry_run != true }}
         run: |
           set -euo pipefail
-          if git fetch --depth=1 origin live:refs/remotes/origin/live 2>/dev/null; then
+          if git diff --quiet README.md; then
+            echo "README.md already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -q -m "docs: sync auto-generated README"
+          if git push origin master; then
+            echo "pushed README sync to master"
+          else
+            echo "push rejected (fetch-depth:1 on a moving branch); will retry on next run"
+          fi
+
+      - name: Publish profile.svg to live branch
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          set -euo pipefail
+          if git fetch --depth=1 origin live 2>/dev/null; then
             if git show origin/live:profile.svg 2>/dev/null | cmp -s - profile.svg; then
               echo "live branch already matches, nothing to publish"
               exit 0
@@ -48,7 +87,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan live-build
           git reset -q
-          git add profile.svg
-          git commit -q -m "chore: refresh live profile stats"
+          # -f: profile.svg is gitignored as a build artifact on master, but it
+          # is the entire content of the live branch.
+          git add -f profile.svg
+          git commit -q -m "chore: refresh live profile"
           git push --force origin HEAD:refs/heads/live
           echo "published $(git rev-parse --short HEAD) to live"

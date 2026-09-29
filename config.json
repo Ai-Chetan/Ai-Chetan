@@ -1,11 +1,43 @@
 {
   "github": {
-    "user": "Ai-Chetan",
+    "user": "Ai-Chetan"
+  },
+  "stats": {
     "contributions_since": "2024-07-01",
     "count_forks_as_repositories": true,
     "count_forks_in_stars": false,
-    "forks_stat": "forked_repositories"
+    "stale_after_days": 90
   },
+  "site": {
+    "portfolio_url": "https://chetan-chaudhari.vercel.app/",
+    "profile_svg_url": "https://raw.githubusercontent.com/Ai-Chetan/Ai-Chetan/live/profile.svg"
+  },
+  "socials": [
+    { "id": "linkedin", "label": "LinkedIn", "icon": "in", "url": "https://www.linkedin.com/in/chaudharichetan1729/" },
+    { "id": "email", "label": "Email", "icon": "@", "url": "mailto:chetankc2005@gmail.com" },
+    { "id": "portfolio", "label": "Portfolio", "icon": "web", "url": "https://chetan-chaudhari.vercel.app/" },
+    { "id": "discord", "label": "Discord", "icon": "chat", "url": "https://discord.gg/5EAzyG86PU" }
+  ],
+  "tech": [
+    { "id": "python", "url": "https://github.com/search?q=python&type=repositories" },
+    { "id": "js", "url": "https://github.com/search?q=javascript&type=repositories" },
+    { "id": "cpp", "url": "https://github.com/search?q=c%2B%2B&type=repositories" },
+    { "id": "react", "url": "https://github.com/search?q=react&type=repositories" },
+    { "id": "next", "url": "https://github.com/search?q=nextjs&type=repositories" },
+    { "id": "tailwind", "url": "https://github.com/search?q=tailwindcss&type=repositories" },
+    { "id": "node", "url": "https://github.com/search?q=nodejs&type=repositories" },
+    { "id": "express", "url": "https://github.com/search?q=expressjs&type=repositories" },
+    { "id": "django", "url": "https://github.com/search?q=django&type=repositories" },
+    { "id": "postgres", "url": "https://github.com/search?q=postgresql&type=repositories" },
+    { "id": "mongo", "url": "https://github.com/search?q=mongodb&type=repositories" },
+    { "id": "mysql", "url": "https://github.com/search?q=mysql&type=repositories" },
+    { "id": "docker", "url": "https://github.com/search?q=docker&type=repositories" },
+    { "id": "aws", "url": "https://github.com/search?q=aws&type=repositories" },
+    { "id": "actions", "url": "https://github.com/features/actions" },
+    { "id": "git", "url": "https://github.com/search?q=git&type=repositories" },
+    { "id": "vscode", "url": "https://code.visualstudio.com/" },
+    { "id": "figma", "url": "https://www.figma.com/" }
+  ],
   "projects": [
     { "card": 1, "repo": "Ai-Chetan/Project-DigitalTwin" },
     { "card": 2, "repo": "Ai-Chetan/Aura-Music" },

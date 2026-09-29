@@ -1,0 +1,6 @@
+# generated artifacts
+profile.svg
+
+# python
+__pycache__/
+*.pyc
