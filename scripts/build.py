@@ -288,6 +288,44 @@ def format_range(start):
     return start.strftime("%b %Y") + " – Present"
 
 
+def format_views(value):
+    """Exact count with comma grouping -- a view counter should not be rounded."""
+    return f"{value:,}"
+
+
+def fetch_profile_views(url):
+    """Pull the number out of a shields-style badge SVG.
+
+    GitHub serves profile.svg through <img>, and browsers refuse to load any
+    external resource from inside an SVG used as an image. A live badge therefore
+    cannot be embedded; the count has to be read here and baked into the file.
+    The badge carries a drop-shadowed label and value, so the last <text> holding
+    digits is the value.
+    """
+    request = urllib.request.Request(url, headers={
+        "User-Agent": USER_AGENT,
+        "Accept": "image/svg+xml,text/xml,*/*",
+    })
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            badge = response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        message = f"HTTP {error.code}"
+        if error.code in RETRYABLE_STATUS:
+            raise RetryableError(message) from error
+        raise BuildError(message) from error
+    except urllib.error.URLError as error:
+        raise RetryableError(f"unreachable: {error.reason}") from error
+
+    candidates = re.findall(r">([^<>]*\d[^<>]*)</text>", badge)
+    if not candidates:
+        raise BuildError("badge carried no numeric text")
+    digits = re.sub(r"[^\d]", "", candidates[-1])
+    if not digits:
+        raise BuildError(f"could not read a count from {candidates[-1]!r}")
+    return int(digits)
+
+
 def escape_xml(value):
     return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -458,8 +496,21 @@ README_SCALE = 99.0  # img widths are percentages of the container; full row = 9
 #   row 2: social icon strip           y 342-430  (icon slices around the
 #   row 3: tech stack + stats          y 430-1260  four social circles)
 #   rows 4-7: contact list rows        y 1260-1358
-#   rows 8-9: footer                   y 1358-1482
-# "P/L/E/D" are link keys resolved from config.socials at build time.
+#   rows 8-9: footer                   y 1358-1510
+#
+# The rows tile contiguously from 0 to the SVG's 1510 viewBox height. Rows 8 and
+# 9 must sum to 152 (90 + 62): the artwork is 1510 units tall, so anything less
+# leaves the bottom of the background image sliced off at the bottom of the
+# profile, and leaves a seam above the footer where the band is never drawn.
+#
+# "P/L/E/D" are link keys resolved from config.socials at build time; None
+# renders an unlinked slice.
+#
+# Contact rows link only the "Link" affordance (text at x=869 plus the chevron
+# ending at x=959), mirroring how the social row is cut tight around each icon.
+# The wide empty margins either side of the panel (contour spans x 553-990) are
+# left unlinked instead of falling back to the portfolio URL.
+CONTACT_LINK_SLICE = (866, 96)
 MOSAIC_ROWS = (
     (0, 342, ((0, 1024, "P"),)),
     (342, 88, (
@@ -468,12 +519,12 @@ MOSAIC_ROWS = (
         (848, 176, "P"),
     )),
     (430, 830, ((0, 1024, "P"),)),
-    (1260, 24, ((0, 568, "P"), (568, 410, "D"), (978, 46, "P"))),
-    (1284, 24, ((0, 568, "P"), (568, 410, "L"), (978, 46, "P"))),
-    (1308, 24, ((0, 568, "P"), (568, 410, "E"), (978, 46, "P"))),
-    (1332, 26, ((0, 568, "P"), (568, 410, "P"), (978, 46, "P"))),
-    (1358, 48, ((0, 1024, "P"),)),
-    (1448, 34, ((0, 1024, "P"),)),
+    (1260, 24, ((0, 866, None), (866, 96, "D"), (962, 62, None))),
+    (1284, 24, ((0, 866, None), (866, 96, "L"), (962, 62, None))),
+    (1308, 24, ((0, 866, None), (866, 96, "E"), (962, 62, None))),
+    (1332, 26, ((0, 866, None), (866, 96, "P"), (962, 62, None))),
+    (1358, 90, ((0, 1024, "P"),)),
+    (1448, 62, ((0, 1024, "P"),)),
 )
 
 
@@ -495,14 +546,15 @@ def generate_readme(cfg, profile_url):
     for y, height, slices in MOSAIC_ROWS:
         row = []
         for x, width, key in slices:
-            url = escape_html_attr(link_for(key))
             alt = alt_for(key)
             pct = f"{width / SVG_WIDTH * README_SCALE:.10g}".rstrip("0").rstrip(".")
             src = f"{escape_html_attr(profile_url)}#svgView(viewBox({x},{y},{width},{height}))"
-            row.append(
-                f'<a href="{url}" target="_blank" rel="noopener noreferrer">'
-                f'<img src="{src}" width="{pct}%" alt="{escape_html_attr(alt)}" align="top" /></a>'
-            )
+            img = f'<img src="{src}" width="{pct}%" alt="{escape_html_attr(alt)}" align="top" />'
+            if key is None:
+                row.append(img)
+                continue
+            url = escape_html_attr(link_for(key))
+            row.append(f'<a href="{url}" target="_blank" rel="noopener noreferrer">{img}</a>')
         lines.append("".join(row) + "<br>")
 
     return "\n".join(lines) + "\n"
@@ -559,10 +611,30 @@ def build_updates(cfg, token, now, warnings):
     else:
         note("no token: set STATS_PAT to fetch live values; keeping template values")
 
+    # ---- profile visits ------------------------------------------------
+    views = None
+    views_cfg = cfg.get("views") or {}
+    if views_cfg.get("enabled", True) and views_cfg.get("source"):
+        try:
+            views = with_retries(
+                lambda: fetch_profile_views(views_cfg["source"]), "profile views"
+            )
+        except BuildError as error:
+            note(f"profile views: {error}")
+        else:
+            # The badge serves a valid "0" for an unknown user, and it resets
+            # counter-side, so a real profile reading 0 is almost always an
+            # upstream hiccup rather than a genuine drop to zero.
+            if views == 0:
+                note("profile views: source reported 0; publishing it anyway")
+    else:
+        note("views.enabled is false; keeping the template's view count")
+
     return {
         "repos": repos,
         "totals": totals,
         "contributions": contributions,
+        "views": views,
     }
 
 
@@ -724,6 +796,14 @@ def apply_svg(svg, cfg, data, now, warnings, token=""):
         except BuildError as error:
             warnings.append(f"tech-{tid}: {error}")
 
+    # ---- profile visit counter -----------------------------------------
+    views = data.get("views")
+    views_cfg = cfg.get("views") or {}
+    if views_cfg.get("label"):
+        svg = put("views-label", escape_xml(views_cfg["label"]))
+    if views is not None:
+        svg = put("views-count", format_views(views))
+
     return svg
 
 
@@ -733,6 +813,7 @@ def generate_svg(template, cfg, data, now, warnings, token=""):
         "stat-contributions", "stat-repositories", "stat-stars", "stat-forks",
         "stat-contributions-range",
         "stat-contributions-box", "stat-repositories-box", "stat-stars-box", "stat-forks-box",
+        "views-count",
     ]
     for project in cfg.get("projects", []):
         c = project["card"]
@@ -796,6 +877,7 @@ def main(argv=None):
           f"stars={data['totals'] and data['totals']['stars']} "
           f"forks={data['totals'] and data['totals']['forks']} "
           f"contributions={data['contributions']}")
+    print(f"views: {data['views']}")
     if warnings:
         print()
         for warning in warnings:
@@ -848,6 +930,7 @@ def write_step_summary(data, warnings):
         f"| stars | {totals.get('stars', '-')} |",
         f"| forks | {totals.get('forks', '-')} |",
         f"| contributions | {data.get('contributions', '-')} |",
+        f"| profile views | {data.get('views', '-')} |",
     ]
     if warnings:
         lines += ["", "### Warnings", ""] + [f"- {warning}" for warning in warnings]

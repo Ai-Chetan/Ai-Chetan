@@ -12,6 +12,11 @@
     "portfolio_url": "https://chetan-chaudhari.vercel.app/",
     "profile_svg_url": "https://raw.githubusercontent.com/Ai-Chetan/Ai-Chetan/live/profile.svg"
   },
+  "views": {
+    "enabled": true,
+    "source": "https://komarev.com/ghpvc/?username=Ai-Chetan",
+    "label": "PROFILE VIEWS"
+  },
   "socials": [
     { "id": "linkedin", "label": "LinkedIn", "icon": "in", "url": "https://www.linkedin.com/in/chaudharichetan1729/" },
     { "id": "email", "label": "Email", "icon": "@", "url": "mailto:chetankc2005@gmail.com" },
